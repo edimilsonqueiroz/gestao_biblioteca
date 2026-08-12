@@ -22,7 +22,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         $hasAdmin = User::where('role', 'admin')->exists();
 
-        Validator::make($input, [
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => $this->passwordRules(),
@@ -32,19 +32,35 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::in(['aluno', 'professor', 'bibliotecaria', 'admin']),
                 $hasAdmin ? Rule::notIn(['admin']) : null,
             ],
-        ])->validate();
+        ];
+
+        // Adicionar validações condicionais para alunos
+        if (($input['role'] ?? null) === 'aluno') {
+            $rules['grade'] = 'required|in:1,2,3';
+            $rules['class'] = 'required|string|max:1';
+        }
+
+        Validator::make($input, $rules)->validate();
 
         $role = $input['role'];
         if ($hasAdmin && $role === 'admin') {
             $role = 'aluno';
         }
 
-        return User::create([
+        $userData = [
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
             'role' => $role,
             'active' => $role === 'admin',
-        ]);
+        ];
+
+        // Adicionar grade e class se for aluno
+        if ($role === 'aluno') {
+            $userData['grade'] = $input['grade'] ?? null;
+            $userData['class'] = $input['class'] ?? null;
+        }
+
+        return User::create($userData);
     }
 }

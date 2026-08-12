@@ -7,10 +7,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { ref } from 'vue'
+import { Upload } from '@lucide/vue'
 
 defineOptions({
   layout: AppLayout,
 })
+
+const coverPreview = ref(null)
+const fileInput = ref(null)
 
 const form = useForm({
   title: '',
@@ -21,10 +26,24 @@ const form = useForm({
   category: '',
   year: new Date().getFullYear(),
   publisher: '',
+  cover: null,
 })
+
+const handleCoverSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    form.cover = file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      coverPreview.value = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
 
 const submit = () => {
   form.post(route('librarian.books.store'), {
+    multipart: true,
     onSuccess: () => {
       // Redirect handled by Laravel
     },
@@ -136,6 +155,38 @@ const submit = () => {
               rows="4"
               class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="cover">Foto da Capa</Label>
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <input
+                  ref="fileInput"
+                  id="cover"
+                  type="file"
+                  accept="image/*"
+                  @change="handleCoverSelect"
+                  class="hidden"
+                />
+                <button
+                  type="button"
+                  @click="fileInput.click()"
+                  class="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-center hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400"
+                >
+                  <Upload class="w-4 h-4" />
+                  Clique para selecionar a imagem
+                </button>
+              </div>
+              <div v-if="coverPreview" class="flex-shrink-0">
+                <img
+                  :src="coverPreview"
+                  alt="Preview da capa"
+                  class="h-32 w-auto object-cover rounded-md border border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+            <InputError v-if="form.errors.cover" :message="form.errors.cover" />
           </div>
 
           <div class="flex gap-4">

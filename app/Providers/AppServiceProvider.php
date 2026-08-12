@@ -10,6 +10,7 @@ use App\Policies\LoanPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -41,9 +42,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Registered::class, function (Registered $event) {
             // Immediately log out the user to prevent auto-login
             Auth::logout();
-            
+
             // Redirect to success page
-            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+            throw new HttpResponseException(
                 redirect()->route('register.success')
             );
         });

@@ -7,12 +7,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { ref } from 'vue'
+import { Upload, X } from '@lucide/vue'
 
 defineOptions({
   layout: AppLayout,
 })
 
 const { book } = usePage().props
+const coverPreview = ref(null)
+const fileInput = ref(null)
 
 const form = useForm({
   title: book.title,
@@ -23,10 +27,32 @@ const form = useForm({
   category: book.category,
   year: book.year,
   publisher: book.publisher,
+  cover: null,
 })
 
+const handleCoverSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    form.cover = file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      coverPreview.value = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removeCover = () => {
+  coverPreview.value = null
+  form.cover = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
 const submit = () => {
-  form.put(route('librarian.books.update', book.id), {
+  form.post(route('librarian.books.update', book.id), {
+    multipart: true,
     onSuccess: () => {
       // Redirect handled by Laravel
     },
@@ -138,6 +164,46 @@ const submit = () => {
               rows="4"
               class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
+          </div>
+
+          <div class="space-y-2">
+            <Label for="cover">Foto da Capa</Label>
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <input
+                  ref="fileInput"
+                  id="cover"
+                  type="file"
+                  accept="image/*"
+                  @change="handleCoverSelect"
+                  class="hidden"
+                />
+                <button
+                  type="button"
+                  @click="fileInput.click()"
+                  class="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-center hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400"
+                >
+                  <Upload class="w-4 h-4" />
+                  Clique para alterar a imagem
+                </button>
+              </div>
+              <div v-if="coverPreview || book.cover" class="flex-shrink-0 relative">
+                <img
+                  :src="coverPreview || `/storage/${book.cover}`"
+                  alt="Preview da capa"
+                  class="h-32 w-auto object-cover rounded-md border border-gray-300 dark:border-gray-600"
+                />
+                <button
+                  v-if="coverPreview"
+                  type="button"
+                  @click="removeCover"
+                  class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full transition-colors"
+                >
+                  <X class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <InputError v-if="form.errors.cover" :message="form.errors.cover" />
           </div>
 
           <div class="flex gap-4">

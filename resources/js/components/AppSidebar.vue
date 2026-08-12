@@ -59,9 +59,9 @@ const librarianNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
-            <NavMain v-if="auth.user.role === 'admin'" :items="adminNavItems" />
-            <NavMain v-if="auth.user.role === 'bibliotecaria'" :items="librarianNavItems" />
+            <NavMain :items="mainNavItems" label="Geral" />
+            <NavMain v-if="auth.user.role === 'admin'" :items="adminNavItems" label="Administração" />
+            <NavMain v-if="auth.user.role === 'bibliotecaria'" :items="librarianNavItems" label="Biblioteca" />
         </SidebarContent>
 
         <SidebarFooter>

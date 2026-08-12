@@ -1,16 +1,86 @@
 <script setup>
-import { usePage, Link } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import { route } from '@/lib/route'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Edit2, Plus, Trash2 } from '@lucide/vue'
+import { Edit2, Plus, Trash2, Search, X } from '@lucide/vue'
+import { ref, computed } from 'vue'
+import { Link } from '@inertiajs/vue3'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 defineOptions({
   layout: AppLayout,
 })
 
-const { books } = usePage().props
+const { books: initialBooks, search: initialSearch } = usePage().props
+const books = ref([...initialBooks])
+const searchQuery = ref(initialSearch || '')
+const showDeleteDialog = ref(false)
+const bookToDelete = ref(null)
+const showImageModal = ref(false)
+const selectedBook = ref(null)
+
+const filteredBooks = computed(() => {
+  if (!searchQuery.value) {
+    return books.value
+  }
+  const query = searchQuery.value.toLowerCase()
+  return books.value.filter(book =>
+    book.title.toLowerCase().includes(query) ||
+    book.author.toLowerCase().includes(query) ||
+    book.isbn.toLowerCase().includes(query)
+  )
+})
+
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.get(route('librarian.books.index'), { search: searchQuery.value })
+  } else {
+    router.get(route('librarian.books.index'))
+  }
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  router.get(route('librarian.books.index'))
+}
+
+const openDeleteDialog = (book) => {
+  bookToDelete.value = book
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = () => {
+  if (bookToDelete.value) {
+    router.delete(route('librarian.books.destroy', bookToDelete.value.id))
+    showDeleteDialog.value = false
+  }
+}
+
+const cancelDelete = () => {
+  showDeleteDialog.value = false
+  bookToDelete.value = null
+}
+
+const openImageModal = (book) => {
+  selectedBook.value = book
+  showImageModal.value = true
+}
+
+const closeImageModal = () => {
+  showImageModal.value = false
+  selectedBook.value = null
+}
 </script>
 
 <template>
@@ -30,19 +100,52 @@ const { books } = usePage().props
 
     <Card class="border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
       <CardHeader class="border-b border-gray-200 dark:border-gray-700">
-        <div>
-          <CardTitle class="text-gray-900 dark:text-white">Livros do Acervo</CardTitle>
-          <CardDescription>{{ books.length }} livro(s) cadastrado(s)</CardDescription>
+        <div class="flex flex-col gap-4">
+          <div>
+            <CardTitle class="text-gray-900 dark:text-white">Livros do Acervo</CardTitle>
+            <CardDescription>{{ filteredBooks.length }} de {{ books.length }} livro(s)</CardDescription>
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-1 flex gap-2">
+              <div class="relative flex-1">
+                <Input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Buscar por título, autor ou ISBN..."
+                  @keyup.enter="handleSearch"
+                  class="pl-10"
+                />
+                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+              <Button
+                @click="handleSearch"
+                class="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                <Search class="w-4 h-4" />
+                Buscar
+              </Button>
+              <Button
+                v-if="searchQuery"
+                @click="clearSearch"
+                variant="outline"
+                class="gap-2"
+              >
+                <X class="w-4 h-4" />
+                Limpar
+              </Button>
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent class="p-0">
-        <div v-if="books.length === 0" class="p-6 text-center text-gray-500">
-          Nenhum livro cadastrado
+        <div v-if="filteredBooks.length === 0" class="p-6 text-center text-gray-500">
+          {{ searchQuery ? 'Nenhum livro encontrado com essa busca' : 'Nenhum livro cadastrado' }}
         </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-50 to-blue-50 dark:from-blue-950/50 dark:to-blue-950/50 border-b border-gray-200 dark:border-gray-700">
               <tr>
+                <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Capa</th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Título</th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Autor</th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">ISBN</th>
@@ -52,7 +155,19 @@ const { books } = usePage().props
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-for="book in books" :key="book.id" class="transition-all hover:bg-blue-50/50 dark:hover:bg-blue-950/30">
+              <tr v-for="book in filteredBooks" :key="book.id" class="transition-all hover:bg-blue-50/50 dark:hover:bg-blue-950/30">
+                <td class="px-6 py-4">
+                  <div v-if="book.cover" class="flex items-center justify-center cursor-pointer" @click="openImageModal(book)">
+                    <img
+                      :src="`/storage/${book.cover}`"
+                      :alt="`Capa de ${book.title}`"
+                      class="h-12 w-auto object-cover rounded border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-110 transition-all duration-200"
+                    />
+                  </div>
+                  <div v-else class="flex items-center justify-center h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">
+                    <span class="text-gray-400 dark:text-gray-500 text-xs">Sem imagem</span>
+                  </div>
+                </td>
                 <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
                   {{ book.title }}
                 </td>
@@ -76,15 +191,14 @@ const { books } = usePage().props
                       <Edit2 class="w-4 h-4" />
                       Editar
                     </Link>
-                    <Link 
-                      :href="route('librarian.books.destroy', book.id)" 
-                      method="DELETE"
-                      as="button"
+                    <button
+                      @click="openDeleteDialog(book)"
+                      type="button"
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 dark:text-red-400 transition-colors"
                     >
                       <Trash2 class="w-4 h-4" />
                       Deletar
-                    </Link>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -93,5 +207,49 @@ const { books } = usePage().props
         </div>
       </CardContent>
     </Card>
+
+    <!-- Delete Confirmation Dialog -->
+    <Dialog :open="showDeleteDialog" @update:open="cancelDelete">
+      <DialogContent>
+        <DialogHeader class="space-y-3">
+          <DialogTitle>Tem certeza de que deseja deletar este livro?</DialogTitle>
+          <DialogDescription>
+            <span v-if="bookToDelete" class="font-semibold text-gray-900 dark:text-white">
+              {{ bookToDelete.title }}
+            </span>
+            <p class="mt-2 text-sm">
+              Esta ação não pode ser desfeita. O livro será permanentemente deletado do sistema.
+            </p>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <DialogClose as-child>
+            <Button variant="outline" @click="cancelDelete">Cancelar</Button>
+          </DialogClose>
+          <Button variant="destructive" @click="confirmDelete">Deletar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Image Preview Modal -->
+    <Dialog :open="showImageModal" @update:open="closeImageModal">
+      <DialogContent class="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle v-if="selectedBook">{{ selectedBook.title }}</DialogTitle>
+        </DialogHeader>
+        <div v-if="selectedBook && selectedBook.cover" class="flex items-center justify-center py-6">
+          <img
+            :src="`/storage/${selectedBook.cover}`"
+            :alt="`Capa de ${selectedBook.title}`"
+            class="max-h-96 w-auto object-cover rounded-lg"
+          />
+        </div>
+        <DialogFooter>
+          <DialogClose as-child>
+            <Button variant="outline" @click="closeImageModal">Fechar</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

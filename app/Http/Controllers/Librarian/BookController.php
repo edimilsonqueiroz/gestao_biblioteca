@@ -5,14 +5,25 @@ namespace App\Http\Controllers\Librarian;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class BookController extends Controller
 {
     public function index()
     {
+        $search = request('search', '');
+        $query = Book::query();
+
+        if ($search) {
+            $query->where('title', 'like', "%{$search}%")
+                ->orWhere('author', 'like', "%{$search}%")
+                ->orWhere('isbn', 'like', "%{$search}%");
+        }
+
         return Inertia::render('Librarian/Books/Index', [
-            'books' => Book::all(),
+            'books' => $query->get(),
+            'search' => $search,
         ]);
     }
 
@@ -80,7 +91,7 @@ class BookController extends Controller
         if ($request->hasFile('cover')) {
             // Delete old cover if exists
             if ($book->cover) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($book->cover);
+                Storage::disk('public')->delete($book->cover);
             }
             $validated['cover'] = $request->file('cover')->store('books/covers', 'public');
         }
@@ -92,6 +103,13 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
+        $this->authorize('delete', $book);
+
+        // Delete cover if exists
+        if ($book->cover) {
+            Storage::disk('public')->delete($book->cover);
+        }
+
         $book->delete();
 
         return redirect()->route('librarian.books.index');

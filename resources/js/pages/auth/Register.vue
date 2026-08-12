@@ -87,12 +87,41 @@ setLayoutProps({
                 <InputError :message="errors.role" />
             </div>
 
-            <div class="grid gap-2">
+            <!-- Campos condicionais para Aluno -->
+            <div v-if="selectedRole === 'aluno'" class="grid gap-2">
+                <Label for="grade">Série *</Label>
+                <select
+                    id="grade"
+                    name="grade"
+                    required
+                    :tabindex="4"
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <option value="1">1ª série</option>
+                    <option value="2">2ª série</option>
+                    <option value="3">3ª série</option>
+                </select>
+                <InputError :message="errors.grade" />
+            </div>
+
+            <div v-if="selectedRole === 'aluno'" class="grid gap-2">
+                <Label for="class">Turma *</Label>
+                <Input
+                    id="class"
+                    type="text"
+                    name="class"
+                    placeholder="Ex: A, B, C..."
+                    :tabindex="5"
+                />
+                <InputError :message="errors.class" />
+            </div>
+
+            <div :class="selectedRole === 'aluno' ? 'grid gap-2' : 'grid gap-2'">
                 <Label for="password">Senha</Label>
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="4"
+                    :tabindex="6"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Sua senha"
@@ -106,7 +135,7 @@ setLayoutProps({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="5"
+                    :tabindex="7"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirme sua senha"
@@ -118,7 +147,7 @@ setLayoutProps({
             <Button
                 type="submit"
                 class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white col-span-2"
-                :tabindex="6"
+                :tabindex="8"
                 :disabled="processing"
                 data-test="register-user-button"
             >

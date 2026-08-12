@@ -17,7 +17,9 @@ const form = useForm({
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'aluno',
+  role: 'bibliotecaria',
+  grade: '',
+  class: '',
 })
 
 const submit = () => {
@@ -99,12 +101,39 @@ const submit = () => {
               class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
             >
-              <option value="admin">Administrador</option>
               <option value="bibliotecaria">Bibliotecária</option>
               <option value="professor">Professor</option>
               <option value="aluno">Aluno</option>
             </select>
             <InputError v-if="form.errors.role" :message="form.errors.role" />
+          </div>
+
+          <!-- Campos condicionais para Aluno -->
+          <div v-if="form.role === 'aluno'" class="space-y-2">
+            <Label for="grade">Série</Label>
+            <select
+              id="grade"
+              v-model="form.grade"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              required
+            >
+              <option value="">Selecione a série</option>
+              <option value="1">1ª série</option>
+              <option value="2">2ª série</option>
+              <option value="3">3ª série</option>
+            </select>
+            <InputError v-if="form.errors.grade" :message="form.errors.grade" />
+          </div>
+
+          <div v-if="form.role === 'aluno'" class="space-y-2">
+            <Label for="class">Turma</Label>
+            <Input
+              id="class"
+              v-model="form.class"
+              type="text"
+              placeholder="Ex: A, B, C..."
+            />
+            <InputError v-if="form.errors.class" :message="form.errors.class" />
           </div>
 
           <div class="flex gap-4">

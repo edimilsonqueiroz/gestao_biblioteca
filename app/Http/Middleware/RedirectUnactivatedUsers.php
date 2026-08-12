@@ -19,6 +19,7 @@ class RedirectUnactivatedUsers extends Middleware
         if ($request->session()->has('newly_registered')) {
             Auth::logout();
             $request->session()->forget('newly_registered');
+
             return redirect()->route('register.success');
         }
 
