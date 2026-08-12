@@ -32,7 +32,14 @@ class BookController extends Controller
             'category' => 'nullable|string|max:255',
             'year' => 'nullable|integer|min:1000|max:'.now()->year,
             'publisher' => 'nullable|string|max:255',
+            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
+
+        $coverPath = null;
+        if ($request->hasFile('cover')) {
+            $coverPath = $request->file('cover')->store('books/covers', 'public');
+            $validated['cover'] = $coverPath;
+        }
 
         Book::create([
             ...$validated,
@@ -67,7 +74,16 @@ class BookController extends Controller
             'category' => 'nullable|string|max:255',
             'year' => 'nullable|integer|min:1000|max:'.now()->year,
             'publisher' => 'nullable|string|max:255',
+            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
+
+        if ($request->hasFile('cover')) {
+            // Delete old cover if exists
+            if ($book->cover) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($book->cover);
+            }
+            $validated['cover'] = $request->file('cover')->store('books/covers', 'public');
+        }
 
         $book->update($validated);
 

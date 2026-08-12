@@ -22,8 +22,11 @@ class RegisterController implements RegisterResponse
         // Create the user using Fortify's action
         $user = $creator->create($request->all());
 
-        // Do NOT log the user in - they will be redirected to success page
-        // The user is created but must be activated by admin
+        // Auto-login admin users, others are redirected to success page
+        if ($user->role === 'admin') {
+            Auth::login($user);
+            return redirect()->route('dashboard');
+        }
 
         return redirect()->route('register.success');
     }

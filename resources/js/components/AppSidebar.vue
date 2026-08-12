@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Users } from '@lucide/vue';
+import { LayoutGrid, Users, BookOpen } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -34,6 +34,14 @@ const adminNavItems: NavItem[] = [
         icon: Users,
     },
 ];
+
+const librarianNavItems: NavItem[] = [
+    {
+        title: 'Livros',
+        href: route('librarian.books.index'),
+        icon: BookOpen,
+    },
+];
 </script>
 
 <template>
@@ -53,6 +61,7 @@ const adminNavItems: NavItem[] = [
         <SidebarContent>
             <NavMain :items="mainNavItems" />
             <NavMain v-if="auth.user.role === 'admin'" :items="adminNavItems" />
+            <NavMain v-if="auth.user.role === 'bibliotecaria'" :items="librarianNavItems" />
         </SidebarContent>
 
         <SidebarFooter>
