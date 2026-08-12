@@ -1,6 +1,6 @@
 <script setup>
 import { usePage, Link } from '@inertiajs/vue3'
-import { route } from '@/lib/route'
+import { loans } from '@/routes/librarian'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -32,7 +32,7 @@ const statusColors = {
           <h1 class="text-3xl font-bold">Empréstimo #{{ loan.id }}</h1>
           <p class="text-gray-600 dark:text-gray-400">Detalhes do empréstimo</p>
         </div>
-        <Link :href="route('librarian.loans.index')" as="button">
+        <Link :href="loans.index().url" as="button">
           <Button variant="outline">Voltar</Button>
         </Link>
       </div>
@@ -99,7 +99,7 @@ const statusColors = {
 
     <div v-if="loan.status === 'active'" class="space-x-2">
       <Link 
-        :href="route('librarian.loans.markReturned', loan.id)"
+        :href="loans.markReturned(loan.id).url"
         method="POST"
         as="button"
       >

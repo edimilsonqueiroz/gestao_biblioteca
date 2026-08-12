@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Users, BookOpen } from '@lucide/vue';
+import { LayoutGrid, Users, BookOpen, Share2, ClipboardList } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { books, loans, reservations } from '@/routes/librarian';
 
 import type { NavItem } from '@/types';
 
@@ -22,7 +23,7 @@ const { auth } = usePage().props;
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: dashboard().url,
         icon: LayoutGrid,
     },
 ];
@@ -38,8 +39,18 @@ const adminNavItems: NavItem[] = [
 const librarianNavItems: NavItem[] = [
     {
         title: 'Livros',
-        href: route('librarian.books.index'),
+        href: books.index().url,
         icon: BookOpen,
+    },
+    {
+        title: 'Empréstimos',
+        href: loans.index().url,
+        icon: Share2,
+    },
+    {
+        title: 'Reservas',
+        href: reservations.index().url,
+        icon: ClipboardList,
     },
 ];
 </script>

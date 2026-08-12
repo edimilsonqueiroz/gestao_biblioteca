@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Librarian\BookController;
 use App\Http\Controllers\Librarian\LoanController;
+use App\Http\Controllers\Librarian\ReservationController;
 use App\Http\Controllers\Student\BrowseController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,7 +13,7 @@ Route::redirect('/', '/login');
 Route::inertia('register-success', 'auth/RegisterSuccess')->name('register.success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // Admin routes
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -22,10 +24,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Librarian routes
     Route::middleware('role:bibliotecaria')->prefix('bibliotecaria')->name('librarian.')->group(function () {
         Route::resource('books', BookController::class);
-        Route::resource('loans', LoanController::class, ['except' => ['create', 'store']]);
+        Route::resource('loans', LoanController::class);
         Route::post('loans/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
         Route::post('loans/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
         Route::post('loans/{loan}/mark-returned', [LoanController::class, 'markReturned'])->name('loans.markReturned');
+
+        // Reservation routes
+        Route::get('reservas', [ReservationController::class, 'index'])->name('reservations.index');
+        Route::post('reservas/{reservation}/approve', [ReservationController::class, 'approve'])->name('reservations.approve');
+        Route::post('reservas/{reservation}/reject', [ReservationController::class, 'reject'])->name('reservations.reject');
+        Route::post('reservas/{reservation}/convert-to-loan', [ReservationController::class, 'convertToLoan'])->name('reservations.convertToLoan');
     });
 
     // Student/Professor routes
