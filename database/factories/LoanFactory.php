@@ -1,0 +1,31 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Book;
+use App\Models\Loan;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Loan>
+ */
+class LoanFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'user_id' => User::factory(),
+            'book_id' => Book::factory(),
+            'loaned_at' => now(),
+            'due_at' => now()->addDays(14),
+            'returned_at' => null,
+            'status' => 'active',
+        ];
+    }
+}
