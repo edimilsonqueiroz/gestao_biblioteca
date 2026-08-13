@@ -40,7 +40,17 @@ class AppServiceProvider extends ServiceProvider
 
         // Listener for new user registration
         Event::listen(Registered::class, function (Registered $event) {
-            // Immediately log out the user to prevent auto-login
+            // Auto-login admin users, redirect others to success page
+            if ($event->user->role === 'admin') {
+                Auth::login($event->user);
+
+                // Redirect to dashboard
+                throw new HttpResponseException(
+                    redirect()->route('dashboard')
+                );
+            }
+
+            // For non-admin users, log out to prevent auto-login
             Auth::logout();
 
             // Redirect to success page

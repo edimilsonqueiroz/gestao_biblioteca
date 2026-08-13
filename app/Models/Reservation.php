@@ -12,8 +12,9 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int $book_id
- * @property Carbon $reserved_at
+ * @property Carbon $reserved_for
  * @property string $status
+ * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -25,12 +26,15 @@ class Reservation extends Model
     protected $fillable = [
         'user_id',
         'book_id',
-        'reserved_at',
+        'reserved_for',
         'status',
+        'notes',
     ];
 
     protected $casts = [
-        'reserved_at' => 'datetime',
+        'reserved_for' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

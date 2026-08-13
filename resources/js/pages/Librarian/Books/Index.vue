@@ -1,11 +1,12 @@
 <script setup>
 import { usePage, router } from '@inertiajs/vue3'
-import { route } from '@/lib/route'
+import { books } from '@/routes/librarian'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Edit2, Plus, Trash2, Search, X } from '@lucide/vue'
+import DeleteBookConfirmation from '@/components/DeleteBookConfirmation.vue'
+import { Edit2, Plus, Search, X } from '@lucide/vue'
 import { ref, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import {
@@ -23,19 +24,17 @@ defineOptions({
 })
 
 const { books: initialBooks, search: initialSearch } = usePage().props
-const books = ref([...initialBooks])
+const booksList = ref([...initialBooks])
 const searchQuery = ref(initialSearch || '')
-const showDeleteDialog = ref(false)
-const bookToDelete = ref(null)
 const showImageModal = ref(false)
 const selectedBook = ref(null)
 
 const filteredBooks = computed(() => {
   if (!searchQuery.value) {
-    return books.value
+    return booksList.value
   }
   const query = searchQuery.value.toLowerCase()
-  return books.value.filter(book =>
+  return booksList.value.filter(book =>
     book.title.toLowerCase().includes(query) ||
     book.author.toLowerCase().includes(query) ||
     book.isbn.toLowerCase().includes(query)
@@ -44,32 +43,20 @@ const filteredBooks = computed(() => {
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.get(route('librarian.books.index'), { search: searchQuery.value })
+    router.get(books.index().url, { search: searchQuery.value })
   } else {
-    router.get(route('librarian.books.index'))
+    router.get(books.index().url)
   }
 }
 
 const clearSearch = () => {
   searchQuery.value = ''
-  router.get(route('librarian.books.index'))
+  router.get(books.index().url)
 }
 
-const openDeleteDialog = (book) => {
-  bookToDelete.value = book
-  showDeleteDialog.value = true
-}
-
-const confirmDelete = () => {
-  if (bookToDelete.value) {
-    router.delete(route('librarian.books.destroy', bookToDelete.value.id))
-    showDeleteDialog.value = false
-  }
-}
-
-const cancelDelete = () => {
-  showDeleteDialog.value = false
-  bookToDelete.value = null
+const handleBookDeleted = (bookId) => {
+  // Remove o livro deletado da lista local
+  booksList.value = booksList.value.filter(b => b.id !== bookId)
 }
 
 const openImageModal = (book) => {
@@ -90,7 +77,7 @@ const closeImageModal = () => {
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Gerenciar Livros</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">Gerencie o acervo de livros da biblioteca</p>
       </div>
-      <Link :href="route('librarian.books.create')" as="button">
+      <Link :href="books.create().url" as="button">
         <Button class="bg-blue-600 hover:bg-blue-700 text-white gap-2">
           <Plus class="w-4 h-4" />
           Novo Livro
@@ -103,7 +90,7 @@ const closeImageModal = () => {
         <div class="flex flex-col gap-4">
           <div>
             <CardTitle class="text-gray-900 dark:text-white">Livros do Acervo</CardTitle>
-            <CardDescription>{{ filteredBooks.length }} de {{ books.length }} livro(s)</CardDescription>
+            <CardDescription>{{ filteredBooks.length }} de {{ booksList.length }} livro(s)</CardDescription>
           </div>
           <div class="flex gap-2">
             <div class="flex-1 flex gap-2">
@@ -187,18 +174,15 @@ const closeImageModal = () => {
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex justify-end gap-2">
-                    <Link :href="route('librarian.books.edit', book.id)" as="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 dark:text-blue-400 transition-colors">
+                    <Link :href="books.edit(book.id).url" as="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 dark:text-blue-400 transition-colors">
                       <Edit2 class="w-4 h-4" />
                       Editar
                     </Link>
-                    <button
-                      @click="openDeleteDialog(book)"
-                      type="button"
-                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 dark:text-red-400 transition-colors"
-                    >
-                      <Trash2 class="w-4 h-4" />
-                      Deletar
-                    </button>
+                    <DeleteBookConfirmation 
+                      :book="book"
+                      :route="books.destroy(book.id).url"
+                      @deleted="handleBookDeleted"
+                    />
                   </div>
                 </td>
               </tr>
@@ -207,29 +191,6 @@ const closeImageModal = () => {
         </div>
       </CardContent>
     </Card>
-
-    <!-- Delete Confirmation Dialog -->
-    <Dialog :open="showDeleteDialog" @update:open="cancelDelete">
-      <DialogContent>
-        <DialogHeader class="space-y-3">
-          <DialogTitle>Tem certeza de que deseja deletar este livro?</DialogTitle>
-          <DialogDescription>
-            <span v-if="bookToDelete" class="font-semibold text-gray-900 dark:text-white">
-              {{ bookToDelete.title }}
-            </span>
-            <p class="mt-2 text-sm">
-              Esta ação não pode ser desfeita. O livro será permanentemente deletado do sistema.
-            </p>
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter class="gap-2">
-          <DialogClose as-child>
-            <Button variant="outline" @click="cancelDelete">Cancelar</Button>
-          </DialogClose>
-          <Button variant="destructive" @click="confirmDelete">Deletar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
 
     <!-- Image Preview Modal -->
     <Dialog :open="showImageModal" @update:open="closeImageModal">

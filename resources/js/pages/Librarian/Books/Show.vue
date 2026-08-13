@@ -1,6 +1,6 @@
 <script setup>
 import { usePage, Link } from '@inertiajs/vue3'
-import { route } from '@/lib/route'
+import { books } from '@/routes/librarian'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -21,10 +21,10 @@ const { book } = usePage().props
           <p class="text-gray-600 dark:text-gray-400">Detalhes do livro</p>
         </div>
         <div class="space-x-2">
-          <Link :href="route('librarian.books.edit', book.id)" as="button">
+          <Link :href="books.edit(book.id).url" as="button">
             <Button>Editar</Button>
           </Link>
-          <Link :href="route('librarian.books.index')" as="button">
+          <Link :href="books.index().url" as="button">
             <Button variant="outline">Voltar</Button>
           </Link>
         </div>

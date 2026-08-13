@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Librarian;
 
 use App\Http\Controllers\Controller;
+use App\Models\Loan;
 use App\Models\Reservation;
-use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
@@ -14,59 +15,60 @@ class ReservationController extends Controller
     public function index()
     {
         $reservations = Reservation::with(['user', 'book'])
-            ->latest('reserved_at')
+            ->latest()
             ->paginate();
 
-        return inertia('Librarian/Reservations/Index', [
+        return Inertia::render('Librarian/Reservations/Index', [
             'reservations' => $reservations,
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Approve a reservation.
      */
-    public function create()
+    public function approve(Reservation $reservation)
     {
-        // Not needed for this implementation
+        $reservation->update(['status' => 'approved']);
+
+        return redirect()->back();
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Reject a reservation.
      */
-    public function store(Request $request)
+    public function reject(Reservation $reservation)
     {
-        // Not needed for this implementation
+        $reservation->update(['status' => 'cancelled']);
+
+        return redirect()->back();
     }
 
     /**
-     * Display the specified resource.
+     * Convert a reservation to a loan.
      */
-    public function show(Reservation $reservation)
+    public function convertToLoan(Reservation $reservation)
     {
-        // Not needed for this implementation
-    }
+        $book = $reservation->book;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Reservation $reservation)
-    {
-        // Not needed for this implementation
-    }
+        if ($book->quantity_available <= 0) {
+            return back()->withErrors(['error' => "O livro '{$book->title}' não tem exemplares disponíveis"]);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Reservation $reservation)
-    {
-        // Not needed for this implementation
-    }
+        // Criar empréstimo
+        Loan::create([
+            'user_id' => $reservation->user_id,
+            'book_id' => $reservation->book_id,
+            'loaned_at' => now(),
+            'due_at' => now()->addDays(14),
+            'status' => 'active',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Reservation $reservation)
-    {
-        // Not needed for this implementation
+        // Decrementar quantidade disponível
+        $book->decrement('quantity_available');
+
+        // Marcar reserva como convertida
+        $reservation->update(['status' => 'converted_to_loan']);
+
+        return redirect()->back();
     }
 }

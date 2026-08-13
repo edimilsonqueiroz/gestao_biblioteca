@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Edit2, Plus, Trash2, Shield, BookOpen, Users, GraduationCap, Search, X } from '@lucide/vue'
+import DeleteUserConfirmation from '@/components/DeleteUserConfirmation.vue'
+import { Edit2, Plus, Shield, BookOpen, Users, GraduationCap, Search, X } from '@lucide/vue'
 import { ref } from 'vue'
 
 defineOptions({
@@ -78,6 +79,11 @@ const toggleUserActive = (user) => {
       togglingId.value = null
     }
   })
+}
+
+const handleUserDeleted = (userId) => {
+  // Remove o usuário deletado da lista local
+  users.value = users.value.filter(u => u.id !== userId)
 }
 
 </script>
@@ -191,15 +197,11 @@ const toggleUserActive = (user) => {
                       <Edit2 class="w-4 h-4" />
                       Editar
                     </Link>
-                    <Link 
-                      :href="route('admin.users.destroy', user.id)" 
-                      method="DELETE"
-                      as="button"
-                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 dark:text-red-400 transition-colors"
-                    >
-                      <Trash2 class="w-4 h-4" />
-                      Deletar
-                    </Link>
+                    <DeleteUserConfirmation 
+                      :user="user"
+                      :route="route('admin.users.destroy', user.id)"
+                      @deleted="handleUserDeleted"
+                    />
                   </div>
                 </td>
               </tr>

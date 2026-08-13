@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, usePage, Link } from '@inertiajs/vue3'
-import { route } from '@/lib/route'
+import { books } from '@/routes/librarian'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -51,7 +51,7 @@ const removeCover = () => {
 }
 
 const submit = () => {
-  form.post(route('librarian.books.update', book.id), {
+  form.put(books.update(book.id).url, {
     multipart: true,
     onSuccess: () => {
       // Redirect handled by Laravel
@@ -210,7 +210,7 @@ const submit = () => {
             <Button type="submit" :disabled="form.processing">
               Salvar Alterações
             </Button>
-            <Link :href="route('librarian.books.index')" as="button">
+            <Link :href="books.index().url" as="button">
               <Button variant="outline">Cancelar</Button>
             </Link>
           </div>

@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, Link } from '@inertiajs/vue3'
-import { route } from '@/lib/route'
+import { books } from '@/routes/librarian'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -42,7 +42,7 @@ const handleCoverSelect = (event) => {
 }
 
 const submit = () => {
-  form.post(route('librarian.books.store'), {
+  form.post(books.store().url, {
     multipart: true,
     onSuccess: () => {
       // Redirect handled by Laravel
@@ -193,7 +193,7 @@ const submit = () => {
             <Button type="submit" :disabled="form.processing">
               Adicionar Livro
             </Button>
-            <Link :href="route('librarian.books.index')" as="button">
+            <Link :href="books.index().url" as="button">
               <Button variant="outline">Cancelar</Button>
             </Link>
           </div>
