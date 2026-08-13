@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Librarian\BookController;
 use App\Http\Controllers\Librarian\LoanController;
+use App\Http\Controllers\Librarian\ReservationController;
 use App\Http\Controllers\Student\BrowseController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('loans/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
         Route::post('loans/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
         Route::post('loans/{loan}/mark-returned', [LoanController::class, 'markReturned'])->name('loans.markReturned');
+        Route::resource('reservations', ReservationController::class, ['only' => ['index']]);
     });
 
     // Student/Professor routes

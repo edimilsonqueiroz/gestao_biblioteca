@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Users, BookOpen } from '@lucide/vue';
+import { LayoutGrid, Users, BookOpen, BookMarked } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -40,6 +40,11 @@ const librarianNavItems: NavItem[] = [
         title: 'Livros',
         href: route('librarian.books.index'),
         icon: BookOpen,
+    },
+    {
+        title: 'Reservas',
+        href: route('librarian.reservations.index'),
+        icon: BookMarked,
     },
 ];
 </script>
